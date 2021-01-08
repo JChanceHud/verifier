@@ -2,19 +2,21 @@ version: "3"
 
 services:
   verifier:
-    image: ethereumoptimism/go-ethereum:latest
+    image: jchancehud/optimism-client-go:latest
     volumes:
       - verifier:/root/.ethereum:rw
     env_file:
       - docker-compose.env
     environment:
-      - ROLLUP_VERIFIER_ENABLE=true
       - CHAIN_ID=9000
       - NETWORK_ID=9000
       - DEV=true
       - DATADIR=/root/.ethereum
       - RPC_ENABLE=true
-      - RPC_ADDR=verifier
+      - RPC=true
+      - HOSTNAME=0.0.0.0
+      - PORT=8045
+      - RPC_ADDR=0.0.0.0
       - RPC_CORS_DOMAIN=*
       - RPC_VHOSTS=*
       - RPC_PORT=8045
@@ -34,17 +36,34 @@ services:
       - ETH1_CONFIRMATION_DEPTH=10
       - ETH1_CHAINID=5
       - ETH1_NETWORKID=5
-      - ETH1_CTC_DEPLOYMENT_HEIGHT=4049579
-      - ETH1_ADDRESS_RESOLVER_ADDRESS=0xf8288f17B625041b8ada6A2434ece72328225dcc
+      - ETH1_CTC_DEPLOYMENT_HEIGHT=4066963
+      - ETH1_ADDRESS_RESOLVER_ADDRESS=0xbB8169C389B30D683D9D271Ab0101315fad6598B
       - TARGET_GAS_LIMIT=9000000
-      - ETH1_L1_CROSS_DOMAIN_MESSENGER_ADDRESS=0x9c4D992cAEC010F1018EbF5C2f10277f44F80b53
-      - ROLLUP_ADDRESS_MANAGER_OWNER_ADDRESS=0x4107438C1b1579f258AF9d1AC06194C4a0F55040
+      - ETH1_L1_CROSS_DOMAIN_MESSENGER_ADDRESS=0x529b3a0493aeAEA01BFCC47040BE54e784Eee534
+      - ROLLUP_ADDRESS_MANAGER_OWNER_ADDRESS=0x6e17DC3BA9779a14eEb86Eb4FF32920ffB739904
       - ROLLUP_STATE_DUMP_PATH=https://raw.githubusercontent.com/jchancehud/optimism-info/master/state-dump.latest.json
       - ROLLUP_DIFFDB_CACHE=1
     ports:
       - 8045:8045
       - 8046:8046
-
+  batch-submitter:
+    image: ethereumoptimism/batch-submitter:latest
+    restart: always
+    environment:
+      - DEPLOYER_PRIVATE_KEY=0xb9db1c416c14df8a27b6fdf1ba84b690a1a89a5bb1577d0b0687a256408091ab
+      - SEQUENCER_PRIVATE_KEY=0x57f0752b53c0b61b5adbe5ec91ea482e5361a15801242c4651aba2ae47f57881
+      - TX_INGESTION_SIGNER_KEY=d2ab07f7c10ac88d5f86f1b4c1035d5195e81f27dbe62ad65e59cbf88205629b
+      - TX_INGESTION_SIGNER_ADDRESS=0x0E0E05Cf14349469ee3B45dc2fcE50E11B9449B8
+      - MAX_TX_SIZE=90000
+      - MIN_TX_SIZE=1
+      - MAX_BATCH_SIZE=50
+      - POLL_INTERVAL=15000
+      - NUM_CONFIRMATIONS=0
+      - FINALITY_CONFIRMATIONS=0
+      - RUN_TX_BATCH_SUBMITTER=true
+      - RUN_STATE_BATCH_SUBMITTER=true
+      - L1_NODE_WEB3_URL=https://goerli.infura.io/v3/5b122dbc87ed4260bf9a2031e8a0e2aa
+      - L2_NODE_WEB3_URL=http://verifier:8045
   fraud_prover:
     image: ethereumoptimism/fraud-prover:latest
     env_file:
@@ -52,7 +71,7 @@ services:
     environment:
       - NO_TIMEOUT=true
       - L2_NODE_WEB3_URL=http://verifier:8045
-      - L1_START_OFFSET=4049579
+      - L1_START_OFFSET=4066963
       - POLLING_INTERVAL=5000
       - RUN_GAS_LIMIT=8999999
       - RELAY_GAS_LIMIT=8999999
